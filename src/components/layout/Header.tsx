@@ -9,11 +9,11 @@ import {
   UserButton,
   useClerk 
 } from "@clerk/clerk-react";
-import { useMediaQuery } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  const isMobile = useIsMobile();
   const { signOut } = useClerk();
 
   const toggleMenu = () => {
