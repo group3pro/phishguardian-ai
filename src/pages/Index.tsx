@@ -1,188 +1,126 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { 
-  Shield, 
-  Brain, 
-  Lock, 
-  Activity, 
-  RefreshCw, 
-  BarChart3, 
-  Terminal, 
-  AlertTriangle, 
-  CheckCircle, 
-  MousePointerClick, 
-  ArrowRight 
-} from "lucide-react";
-import AnimatedBackground from "@/components/ui/AnimatedBackground";
+import { Button } from "@/components/ui/button";
+import { Shield, Mail, ArrowRight, Lock, AlertTriangle, Database } from "lucide-react";
 import FeatureCard from "@/components/ui/FeatureCard";
-import { Card, CardContent } from "@/components/ui/card";
+import AnimatedBackground from "@/components/ui/AnimatedBackground";
+import { SignedIn, SignedOut } from "@clerk/clerk-react";
 
 const Index = () => {
   return (
-    <div className="relative pt-24 overflow-hidden">
+    <div className="relative">
       <AnimatedBackground />
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 pt-10 pb-20 md:pt-20 md:pb-32 flex flex-col items-center justify-center text-center">
-        <div className="inline-flex items-center justify-center px-3 py-1 mb-6 text-sm rounded-full bg-primary/10 text-primary animate-fade-in">
-          <Shield className="h-4 w-4 mr-2" />
-          <span>AI-powered email protection</span>
-        </div>
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 max-w-4xl mx-auto leading-tight animate-fade-in text-balance">
-          Protect Your Inbox with <span className="text-gradient">AI-Powered</span> Phishing Detection
-        </h1>
-        <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto mb-10 animate-fade-in text-balance">
-          Our advanced AI system detects and blocks sophisticated phishing attempts that traditional filters miss.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 animate-fade-in">
-          <Button asChild size="lg" className="gap-2">
-            <Link to="/scanner">
-              Try Email Scanner <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
-          <Button asChild variant="outline" size="lg">
-            <Link to="/about">Learn More</Link>
-          </Button>
-        </div>
-        
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-16 w-full max-w-3xl animate-fade-in">
-          <div className="text-center px-4 py-5 glassmorphism rounded-xl">
-            <p className="text-3xl font-bold text-primary">99.7%</p>
-            <p className="text-sm text-muted-foreground">Detection Rate</p>
-          </div>
-          <div className="text-center px-4 py-5 glassmorphism rounded-xl">
-            <p className="text-3xl font-bold text-primary">0.001%</p>
-            <p className="text-sm text-muted-foreground">False Positives</p>
-          </div>
-          <div className="text-center px-4 py-5 glassmorphism rounded-xl">
-            <p className="text-3xl font-bold text-primary">24/7</p>
-            <p className="text-sm text-muted-foreground">Protection</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="container mx-auto px-4 py-16 md:py-24">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-balance">Advanced AI Protection Features</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-balance">
-            Our system uses sophisticated machine learning and natural language processing to identify and block malicious emails.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <FeatureCard
-            icon={Brain}
-            title="Machine Learning Detection"
-            description="Continuously learning algorithms identify new phishing patterns and techniques as they emerge."
-          />
-          <FeatureCard
-            icon={Terminal}
-            title="NLP Content Analysis"
-            description="Natural Language Processing analyzes email content to detect suspicious language patterns."
-          />
-          <FeatureCard
-            icon={Lock}
-            title="Link & Attachment Scanning"
-            description="Deep scanning of links and attachments to identify malicious content before you click."
-          />
-          <FeatureCard
-            icon={Activity}
-            title="Real-time Protection"
-            description="Instant analysis and protection against phishing attempts as they arrive in your inbox."
-          />
-          <FeatureCard
-            icon={RefreshCw}
-            title="Adaptive Security"
-            description="Self-improving system that adapts to new threats and phishing techniques automatically."
-          />
-          <FeatureCard
-            icon={BarChart3}
-            title="Reduced False Positives"
-            description="Smart classification ensures legitimate emails aren't incorrectly flagged as threats."
-          />
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="bg-secondary/50 py-16 md:py-24">
+      <section className="relative pt-24 pb-20 md:pt-32 md:pb-32 overflow-hidden">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-balance">How PhishGuardian AI Works</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-balance">
-              Our multi-layered approach ensures comprehensive protection against even the most sophisticated phishing attempts.
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="inline-flex items-center justify-center px-3 py-1 mb-6 text-sm rounded-full bg-primary/10 text-primary">
+              <Shield className="h-4 w-4 mr-2" />
+              <span>AI-Powered Protection</span>
+            </div>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+              Secure Your Inbox with
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">
+                PhishGuardian AI
+              </span>
+            </h1>
+            <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              Advanced phishing detection powered by machine learning to keep your communications safe from threats.
             </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <Card className="glassmorphism border-primary/10 overflow-hidden">
-              <div className="h-2 bg-gradient-to-r from-blue-400 to-blue-600" />
-              <CardContent className="pt-6">
-                <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-4">
-                  <MousePointerClick className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-lg font-medium mb-3">1. Email Analysis</h3>
-                <p className="text-sm text-muted-foreground">
-                  Our AI scans incoming emails, analyzing sender details, email content, links, and attachments for suspicious patterns.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="glassmorphism border-primary/10 overflow-hidden">
-              <div className="h-2 bg-gradient-to-r from-blue-400 to-blue-600" />
-              <CardContent className="pt-6">
-                <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-4">
-                  <AlertTriangle className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-lg font-medium mb-3">2. Threat Detection</h3>
-                <p className="text-sm text-muted-foreground">
-                  Machine learning models compare against millions of known phishing attempts to identify potential threats.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="glassmorphism border-primary/10 overflow-hidden">
-              <div className="h-2 bg-gradient-to-r from-blue-400 to-blue-600" />
-              <CardContent className="pt-6">
-                <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-4">
-                  <CheckCircle className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-lg font-medium mb-3">3. Protection Action</h3>
-                <p className="text-sm text-muted-foreground">
-                  Suspicious emails are flagged or quarantined, while detailed threat analysis is provided to users.
-                </p>
-              </CardContent>
-            </Card>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <SignedOut>
+                <Link to="/sign-up">
+                  <Button size="lg" className="gap-2">
+                    Get Started <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link to="/sign-in">
+                  <Button size="lg" variant="outline" className="gap-2">
+                    Sign In <Lock className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </SignedOut>
+              <SignedIn>
+                <Link to="/dashboard">
+                  <Button size="lg" className="gap-2">
+                    Go to Dashboard <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </SignedIn>
+              <Link to="/scanner">
+                <Button size="lg" variant="outline" className="gap-2">
+                  Try Scanner <Mail className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="container mx-auto px-4 py-16 md:py-24">
-        <div className="max-w-5xl mx-auto glassmorphism rounded-2xl p-8 md:p-12 relative overflow-hidden shadow-sm">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
-          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="max-w-lg">
-              <h2 className="text-2xl md:text-3xl font-bold mb-4 text-balance">
-                Experience AI-powered phishing protection
-              </h2>
-              <p className="text-muted-foreground mb-6 text-balance">
-                Try our advanced email scanner now to analyze suspicious emails and protect yourself from phishing attacks.
+      {/* Features Section */}
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold mb-4">AI-Powered Protection</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Our advanced technology detects and blocks sophisticated phishing attempts in real-time
               </p>
-              <Button asChild size="lg" className="gap-2">
-                <Link to="/scanner">
-                  Try Scanner Now <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
             </div>
-            <div className="relative">
-              <div className="absolute -inset-1 rounded-full bg-primary/20 blur-xl animate-pulse-glow" />
-              <div className="relative w-32 h-32 rounded-full glassmorphism flex items-center justify-center shadow-sm">
-                <Shield className="h-16 w-16 text-primary/80" />
-              </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <FeatureCard
+                icon={AlertTriangle}
+                title="Phishing Detection"
+                description="Advanced algorithms identify malicious emails, websites, and links with high accuracy."
+              />
+              <FeatureCard
+                icon={Database}
+                title="Machine Learning"
+                description="Our AI continuously improves from new threats to enhance protection against evolving attacks."
+              />
+              <FeatureCard
+                icon={Lock}
+                title="Real-time Protection"
+                description="Instant analysis of suspicious content to keep you safe from emerging threats."
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl font-bold mb-4">Ready to Protect Yourself?</h2>
+            <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
+              Join thousands of users who trust PhishGuardian to keep their communications safe
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <SignedOut>
+                <Link to="/sign-up">
+                  <Button size="lg" className="gap-2">
+                    Create Free Account <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </SignedOut>
+              <SignedIn>
+                <Link to="/dashboard">
+                  <Button size="lg" className="gap-2">
+                    Go to Dashboard <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </SignedIn>
+              <Link to="/about">
+                <Button size="lg" variant="outline">
+                  Learn More
+                </Button>
+              </Link>
             </div>
           </div>
         </div>

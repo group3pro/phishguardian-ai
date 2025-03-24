@@ -1,107 +1,108 @@
 
-import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import React from "react";
+import { Link } from "react-router-dom";
 import { Shield, Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { 
+  SignedIn, 
+  SignedOut, 
+  UserButton,
+  useClerk 
+} from "@clerk/clerk-react";
+import { useMediaQuery } from "@/hooks/use-mobile";
 
 const Header = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const location = useLocation();
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const { signOut } = useClerk();
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 10) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
   };
 
-  // Close mobile menu when route changes
-  useEffect(() => {
-    setIsMobileMenuOpen(false);
-  }, [location.pathname]);
-
-  const navLinks = [
-    { title: "Home", path: "/" },
-    { title: "Scanner", path: "/scanner" },
-    { title: "About", path: "/about" },
-  ];
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+  };
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? "glassmorphism shadow-sm py-2" : "py-4"
-      }`}
-    >
-      <div className="container mx-auto px-4 flex justify-between items-center">
-        <Link to="/" className="flex items-center space-x-2">
-          <Shield className="h-6 w-6 text-primary animate-pulse-glow" />
-          <span className="font-semibold text-xl">PhishGuardian AI</span>
+    <header className="fixed top-0 left-0 right-0 bg-background/60 backdrop-blur-md z-40 border-b border-border/40">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        <Link 
+          to="/" 
+          className="flex items-center gap-2 font-semibold text-lg"
+          onClick={closeMenu}
+        >
+          <Shield className="h-5 w-5 text-primary" />
+          <span>PhishGuardian</span>
         </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-1">
-          {navLinks.map((link) => (
-            <Link
-              key={link.path}
-              to={link.path}
-              className={`px-3 py-2 rounded-md transition-colors duration-200 ${
-                location.pathname === link.path
-                  ? "text-primary font-medium"
-                  : "text-foreground/70 hover:text-foreground hover:bg-muted"
-              }`}
-            >
-              {link.title}
-            </Link>
-          ))}
-          <Button size="sm" className="ml-2 shadow-sm">
-            Get Started
+        <div className="md:hidden">
+          <Button variant="ghost" size="icon" onClick={toggleMenu}>
+            {isMenuOpen ? <X /> : <Menu />}
           </Button>
-        </nav>
-
-        {/* Mobile Menu Button */}
-        <button
-          className="md:hidden p-2 rounded-md text-foreground/70 hover:text-foreground hover:bg-muted"
-          onClick={toggleMobileMenu}
-          aria-label="Toggle Menu"
-        >
-          {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
-      </div>
-
-      {/* Mobile Navigation */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden glassmorphism shadow-md">
-          <div className="container mx-auto px-4 py-4 flex flex-col space-y-3">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`px-3 py-2 rounded-md transition-colors duration-200 ${
-                  location.pathname === link.path
-                    ? "text-primary font-medium"
-                    : "text-foreground/70 hover:text-foreground hover:bg-muted"
-                }`}
-              >
-                {link.title}
-              </Link>
-            ))}
-            <Button size="sm" className="shadow-sm mt-2">
-              Get Started
-            </Button>
-          </div>
         </div>
-      )}
+
+        <nav className={`${isMobile ? 
+          `absolute top-16 left-0 right-0 bg-background border-b border-border/40 shadow-md transition-all duration-200 ${isMenuOpen ? 'block' : 'hidden'} p-4` : 
+          'flex items-center gap-6'}`}
+        >
+          <Link 
+            to="/" 
+            className="text-foreground/70 hover:text-foreground transition-colors px-2 py-1.5"
+            onClick={closeMenu}
+          >
+            Home
+          </Link>
+          
+          <SignedIn>
+            <Link 
+              to="/dashboard" 
+              className="text-foreground/70 hover:text-foreground transition-colors px-2 py-1.5"
+              onClick={closeMenu}
+            >
+              Dashboard
+            </Link>
+          </SignedIn>
+          
+          <Link 
+            to="/scanner" 
+            className="text-foreground/70 hover:text-foreground transition-colors px-2 py-1.5"
+            onClick={closeMenu}
+          >
+            Scanner
+          </Link>
+          <Link 
+            to="/about" 
+            className="text-foreground/70 hover:text-foreground transition-colors px-2 py-1.5"
+            onClick={closeMenu}
+          >
+            About
+          </Link>
+
+          <div className={`${isMobile ? 'mt-4 flex flex-col gap-3' : 'ml-2 flex items-center gap-3'}`}>
+            <SignedIn>
+              <div className="flex items-center gap-3">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => signOut()}
+                >
+                  Sign Out
+                </Button>
+                <UserButton afterSignOutUrl="/" />
+              </div>
+            </SignedIn>
+            
+            <SignedOut>
+              <Link to="/sign-in" onClick={closeMenu}>
+                <Button variant="outline">Sign In</Button>
+              </Link>
+              <Link to="/sign-up" onClick={closeMenu}>
+                <Button>Sign Up</Button>
+              </Link>
+            </SignedOut>
+          </div>
+        </nav>
+      </div>
     </header>
   );
 };
