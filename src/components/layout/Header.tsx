@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { Shield, Menu, X, MessageSquare, Mail, Link2 } from "lucide-react";
+import { Shield, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   SignedIn, 
@@ -65,40 +65,15 @@ const Header = () => {
               </Link>
             </SignedIn>
             
-            <Link 
-              to="/scanner" 
-              className="text-foreground/70 hover:text-foreground transition-colors px-2 py-1.5 rounded-md hover:bg-accent/50 flex items-center"
-              onClick={closeMenu}
-            >
-              Scanner
-            </Link>
-
-            <Link 
-              to="/chatbot" 
-              className="text-foreground/70 hover:text-foreground transition-colors px-2 py-1.5 rounded-md hover:bg-accent/50 flex items-center gap-1"
-              onClick={closeMenu}
-            >
-              <MessageSquare className="h-4 w-4" />
-              <span>Chatbot</span>
-            </Link>
-
-            <Link 
-              to="/email-verifier" 
-              className="text-foreground/70 hover:text-foreground transition-colors px-2 py-1.5 rounded-md hover:bg-accent/50 flex items-center gap-1"
-              onClick={closeMenu}
-            >
-              <Mail className="h-4 w-4" />
-              <span>Email Verifier</span>
-            </Link>
-
-            <Link 
-              to="/link-checker" 
-              className="text-foreground/70 hover:text-foreground transition-colors px-2 py-1.5 rounded-md hover:bg-accent/50 flex items-center gap-1"
-              onClick={closeMenu}
-            >
-              <Link2 className="h-4 w-4" />
-              <span>Link Checker</span>
-            </Link>
+            <SignedOut>
+              <Link 
+                to="/scanner" 
+                className="text-foreground/70 hover:text-foreground transition-colors px-2 py-1.5 rounded-md hover:bg-accent/50 flex items-center"
+                onClick={closeMenu}
+              >
+                Scanner
+              </Link>
+            </SignedOut>
 
             <Link 
               to="/about" 

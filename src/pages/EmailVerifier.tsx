@@ -5,64 +5,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Mail, CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
 import AnimatedBackground from "@/components/ui/AnimatedBackground";
-import { toast } from "sonner";
+import { verifyEmail, EmailVerificationResult } from "@/services/emailVerificationService";
 
 const EmailVerifier = () => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<{
-    valid: boolean;
-    disposable: boolean;
-    deliverable: boolean;
-    domain: string;
-    formatValid: boolean;
-  } | null>(null);
+  const [result, setResult] = useState<EmailVerificationResult | null>(null);
 
-  const verifyEmail = async () => {
-    if (!email.trim()) {
-      toast.error("Please enter an email address");
-      return;
-    }
+  const handleVerifyEmail = async () => {
+    if (!email.trim()) return;
 
     setIsLoading(true);
     setResult(null);
 
     try {
-      // Simulate API call with mock response
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Email format validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      const formatValid = emailRegex.test(email);
-      
-      // For demo purposes, let's consider some domains as "disposable" or "invalid"
-      const domain = email.split('@')[1];
-      const disposableDomains = ['tempmail.com', 'fakeemail.com', 'throwaway.com', 'mailinator.com'];
-      const isDisposable = disposableDomains.includes(domain);
-      
-      // Deliverability check (just mocking the response)
-      // In a real app, this would call an actual email verification API
-      const isDeliverable = formatValid && !isDisposable && Math.random() > 0.2;
-      
-      // For demo purposes, valid if format correct, not disposable, and deliverable
-      const isValid = formatValid && !isDisposable && isDeliverable;
-      
-      setResult({
-        valid: isValid,
-        disposable: isDisposable,
-        deliverable: isDeliverable,
-        domain,
-        formatValid
-      });
-      
-      if (isValid) {
-        toast.success("Email appears to be valid");
-      } else {
-        toast.warning("Email validation found issues");
+      const data = await verifyEmail(email);
+      if (data) {
+        setResult(data);
       }
     } catch (error) {
-      console.error("Error verifying email:", error);
-      toast.error("Failed to verify email. Please try again.");
+      console.error("Error in email verification:", error);
     } finally {
       setIsLoading(false);
     }
@@ -103,7 +65,7 @@ const EmailVerifier = () => {
                       className="flex-1"
                     />
                     <Button 
-                      onClick={verifyEmail} 
+                      onClick={handleVerifyEmail} 
                       disabled={isLoading || !email.trim()}
                     >
                       {isLoading ? (
@@ -120,13 +82,13 @@ const EmailVerifier = () => {
                 {result && (
                   <div className="animate-fade-in bg-card border rounded-lg p-4 mt-4">
                     <div className="flex items-center gap-2 mb-4">
-                      {result.valid ? (
+                      {result.deliverability === "DELIVERABLE" ? (
                         <CheckCircle className="h-5 w-5 text-green-500" />
                       ) : (
                         <AlertTriangle className="h-5 w-5 text-amber-500" />
                       )}
                       <span className="font-medium">
-                        {result.valid 
+                        {result.deliverability === "DELIVERABLE" 
                           ? "Email appears to be valid" 
                           : "Email validation found issues"}
                       </span>
@@ -135,8 +97,8 @@ const EmailVerifier = () => {
                     <div className="space-y-2 text-sm">
                       <div className="grid grid-cols-2 gap-1">
                         <span className="text-muted-foreground">Format:</span>
-                        <span className={result.formatValid ? "text-green-500" : "text-red-500"}>
-                          {result.formatValid ? "Valid" : "Invalid"}
+                        <span className={result.is_valid_format ? "text-green-500" : "text-red-500"}>
+                          {result.is_valid_format ? "Valid" : "Invalid"}
                         </span>
                       </div>
                       
@@ -147,16 +109,26 @@ const EmailVerifier = () => {
                       
                       <div className="grid grid-cols-2 gap-1">
                         <span className="text-muted-foreground">Disposable:</span>
-                        <span className={result.disposable ? "text-red-500" : "text-green-500"}>
-                          {result.disposable ? "Yes (Not recommended)" : "No"}
+                        <span className={result.is_disposable_email ? "text-red-500" : "text-green-500"}>
+                          {result.is_disposable_email ? "Yes (Not recommended)" : "No"}
                         </span>
                       </div>
                       
                       <div className="grid grid-cols-2 gap-1">
                         <span className="text-muted-foreground">Deliverable:</span>
-                        <span className={result.deliverable ? "text-green-500" : "text-red-500"}>
-                          {result.deliverable ? "Likely" : "Unlikely"}
+                        <span className={result.deliverability === "DELIVERABLE" ? "text-green-500" : "text-red-500"}>
+                          {result.deliverability === "DELIVERABLE" ? "Likely" : "Unlikely"}
                         </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-1">
+                        <span className="text-muted-foreground">Quality Score:</span>
+                        <span>{(result.quality_score * 100).toFixed(0)}%</span>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-1">
+                        <span className="text-muted-foreground">Free Email:</span>
+                        <span>{result.is_free_email ? "Yes" : "No"}</span>
                       </div>
                     </div>
                   </div>

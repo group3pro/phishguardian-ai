@@ -5,15 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, Bot, User, Loader2 } from "lucide-react";
 import AnimatedBackground from "@/components/ui/AnimatedBackground";
+import { getAIResponse, ChatMessage } from "@/services/chatbotService";
 import { toast } from "sonner";
 
-interface Message {
-  role: "assistant" | "user";
-  content: string;
-}
-
 const Chatbot = () => {
-  const [messages, setMessages] = useState<Message[]>([
+  const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
       content: "Hello! I'm your cybersecurity assistant. Ask me anything about phishing, security threats, or best practices to stay safe online.",
@@ -35,7 +31,7 @@ const Chatbot = () => {
     e.preventDefault();
     if (!input.trim()) return;
 
-    const userMessage: Message = {
+    const userMessage: ChatMessage = {
       role: "user",
       content: input,
     };
@@ -45,27 +41,11 @@ const Chatbot = () => {
     setIsLoading(true);
 
     try {
-      // Simulate API call with mock responses about cybersecurity
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await getAIResponse([...messages, userMessage]);
       
-      const securityResponses = [
-        "Phishing emails often create a sense of urgency to trick you into acting quickly without thinking.",
-        "Always verify the sender's email address carefully. Phishers often use domains that look similar to legitimate ones.",
-        "Be cautious of unsolicited emails asking for personal information or credentials.",
-        "Enable two-factor authentication wherever possible to add an extra layer of security.",
-        "Keep your software and operating systems updated to protect against known vulnerabilities.",
-        "Use strong, unique passwords for each of your accounts.",
-        "Hover over links before clicking to verify the actual URL destination.",
-        "Be wary of emails with poor grammar or spelling errors, as these are common in phishing attempts.",
-        "Never share sensitive information via email, even if the request seems legitimate.",
-        "If an offer seems too good to be true, it probably is - be skeptical of unexpected winnings or rewards."
-      ];
-      
-      const randomResponse = securityResponses[Math.floor(Math.random() * securityResponses.length)];
-      
-      const assistantMessage: Message = {
+      const assistantMessage: ChatMessage = {
         role: "assistant",
-        content: randomResponse,
+        content: response,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);

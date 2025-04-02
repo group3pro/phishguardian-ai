@@ -6,11 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, Globe, Link2, Loader2, Shield, MessageSquare } from "lucide-react";
+import { Mail, Globe, Link2, Loader2, Shield, MessageSquare, CheckCircle, AlertTriangle } from "lucide-react";
 import AnimatedBackground from "@/components/ui/AnimatedBackground";
 import { usePhishingDetection } from "@/hooks/usePhishingDetection";
 import PhishingScoreCard from "@/components/ui/PhishingScoreCard";
 import { toast } from "sonner";
+import { verifyEmail, EmailVerificationResult } from "@/services/emailVerificationService";
+import { checkLink, LinkCheckResult } from "@/services/linkCheckService";
+import { getAIResponse, ChatMessage } from "@/services/chatbotService";
 
 const Dashboard = () => {
   const { user } = useUser();
@@ -20,10 +23,20 @@ const Dashboard = () => {
   const [linkUrl, setLinkUrl] = useState("");
   const [emailToVerify, setEmailToVerify] = useState("");
   const [chatMessage, setChatMessage] = useState("");
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
+    { role: "assistant", content: "Ask me anything about cybersecurity!" }
+  ]);
+
+  // Results states
+  const [emailVerifyResult, setEmailVerifyResult] = useState<EmailVerificationResult | null>(null);
+  const [linkCheckResult, setLinkCheckResult] = useState<LinkCheckResult | null>(null);
   
   const { analyzeEmail, isLoading, analysisResult, resetAnalysis } = usePhishingDetection();
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [linkLoading, setLinkLoading] = useState(false);
+  const [chatLoading, setChatLoading] = useState(false);
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     if (activeTab === "email" && !emailContent.trim()) {
       toast.error("Please enter email content to analyze");
       return;
@@ -49,52 +62,78 @@ const Dashboard = () => {
       return;
     }
     
-    // For now, we'll use the email analysis for all types
     if (activeTab === "email") {
       analyzeEmail(emailContent);
     } else if (activeTab === "website") {
-      analyzeEmail(websiteUrl); // We're reusing the email analyzer for demo
+      // For website analysis, we treat the URL as content to analyze
+      analyzeEmail(`Website URL: ${websiteUrl}`);
     } else if (activeTab === "link") {
-      analyzeEmail(linkUrl); // We're reusing the email analyzer for demo
+      // For link checking, use the dedicated service
+      setLinkLoading(true);
+      setLinkCheckResult(null);
+      try {
+        const result = await checkLink(linkUrl);
+        if (result) {
+          setLinkCheckResult(result);
+        }
+      } catch (error) {
+        console.error("Error checking link:", error);
+      } finally {
+        setLinkLoading(false);
+      }
     } else if (activeTab === "verify-email") {
-      // Email verification simulation
-      toast.promise(
-        new Promise((resolve) => setTimeout(resolve, 1500)),
-        {
-          loading: 'Verifying email...',
-          success: () => {
-            // Simple validation for demonstration
-            const isValidFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailToVerify);
-            return isValidFormat 
-              ? `${emailToVerify} appears to be a valid email format` 
-              : `${emailToVerify} doesn't appear to be a valid email format`;
-          },
-          error: 'Failed to verify email',
+      // Email verification
+      setVerifyLoading(true);
+      setEmailVerifyResult(null);
+      try {
+        const result = await verifyEmail(emailToVerify);
+        if (result) {
+          setEmailVerifyResult(result);
         }
-      );
+      } catch (error) {
+        console.error("Error verifying email:", error);
+      } finally {
+        setVerifyLoading(false);
+      }
     } else if (activeTab === "chatbot") {
-      // Chatbot simulation
-      toast.promise(
-        new Promise((resolve) => setTimeout(resolve, 1500)),
-        {
-          loading: 'Processing your question...',
-          success: () => {
-            setChatMessage("");
-            return "This is a simulated chatbot response. In a real implementation, this would connect to an AI service.";
-          },
-          error: 'Failed to get response',
-        }
-      );
+      // Chatbot interaction
+      setChatLoading(true);
+      const userMessage: ChatMessage = {
+        role: "user",
+        content: chatMessage
+      };
+      
+      setChatHistory(prev => [...prev, userMessage]);
+      setChatMessage("");
+      
+      try {
+        const response = await getAIResponse([...chatHistory, userMessage]);
+        setChatHistory(prev => [...prev, { role: "assistant", content: response }]);
+      } catch (error) {
+        console.error("Error getting chatbot response:", error);
+        toast.error("Failed to get a response");
+      } finally {
+        setChatLoading(false);
+      }
     }
   };
 
   const handleReset = () => {
-    setEmailContent("");
-    setWebsiteUrl("");
-    setLinkUrl("");
-    setEmailToVerify("");
-    setChatMessage("");
-    resetAnalysis();
+    if (activeTab === "email") {
+      setEmailContent("");
+      resetAnalysis();
+    } else if (activeTab === "website") {
+      setWebsiteUrl("");
+      resetAnalysis();
+    } else if (activeTab === "link") {
+      setLinkUrl("");
+      setLinkCheckResult(null);
+    } else if (activeTab === "verify-email") {
+      setEmailToVerify("");
+      setEmailVerifyResult(null);
+    } else if (activeTab === "chatbot") {
+      setChatHistory([{ role: "assistant", content: "Ask me anything about cybersecurity!" }]);
+    }
   };
 
   return (
@@ -188,10 +227,27 @@ const Dashboard = () => {
                 </TabsContent>
                 
                 <TabsContent value="chatbot" className="space-y-4">
+                  <div className="border rounded-md p-3 h-[200px] overflow-y-auto mb-3">
+                    {chatHistory.map((message, index) => (
+                      <div 
+                        key={index}
+                        className={`flex mb-3 ${message.role === "assistant" ? "justify-start" : "justify-end"}`}
+                      >
+                        <div 
+                          className={`p-2 rounded-lg max-w-[80%] ${
+                            message.role === "assistant" 
+                              ? "bg-secondary/60 text-foreground" 
+                              : "bg-primary text-primary-foreground"
+                          }`}
+                        >
+                          {message.content}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                   <div>
-                    <Textarea 
+                    <Input 
                       placeholder="Ask a question about phishing or cybersecurity..." 
-                      className="min-h-[150px]"
                       value={chatMessage}
                       onChange={(e) => setChatMessage(e.target.value)}
                     />
@@ -202,29 +258,33 @@ const Dashboard = () => {
                   <Button 
                     onClick={handleAnalyze} 
                     className="flex-1"
-                    disabled={isLoading}
+                    disabled={isLoading || verifyLoading || linkLoading || chatLoading}
                   >
-                    {isLoading ? (
+                    {(isLoading || verifyLoading || linkLoading || chatLoading) ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-                        {activeTab === "email" || activeTab === "website" || activeTab === "link" 
+                        {activeTab === "email" || activeTab === "website" 
                           ? "Analyzing..." 
                           : activeTab === "verify-email" 
                             ? "Verifying..." 
-                            : "Processing..."}
+                            : activeTab === "link"
+                              ? "Checking..."
+                              : "Processing..."}
                       </>
                     ) : (
-                      activeTab === "email" || activeTab === "website" || activeTab === "link" 
+                      activeTab === "email" || activeTab === "website" 
                         ? "Analyze Now" 
                         : activeTab === "verify-email" 
                           ? "Verify Email" 
-                          : "Send Message"
+                          : activeTab === "link"
+                            ? "Check Link"
+                            : "Send Message"
                     )}
                   </Button>
                   <Button 
                     variant="outline" 
                     onClick={handleReset}
-                    disabled={isLoading}
+                    disabled={isLoading || verifyLoading || linkLoading || chatLoading}
                   >
                     Reset
                   </Button>
@@ -233,9 +293,178 @@ const Dashboard = () => {
             </CardContent>
           </Card>
           
-          {analysisResult && (activeTab === "email" || activeTab === "website" || activeTab === "link") && (
+          {analysisResult && (activeTab === "email" || activeTab === "website") && (
             <div className="mt-8 animate-fade-in">
               <PhishingScoreCard result={analysisResult} />
+            </div>
+          )}
+
+          {linkCheckResult && activeTab === "link" && (
+            <div className="mt-8 animate-fade-in">
+              <Card className="glassmorphism shadow-sm">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Link Analysis Results</CardTitle>
+                    <div className="flex items-center space-x-2">
+                      {!linkCheckResult.suspicious && !linkCheckResult.malware && !linkCheckResult.phishing ? (
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <AlertTriangle className="h-5 w-5 text-red-500" />
+                      )}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className={`flex items-center gap-3 p-4 rounded-lg ${
+                    !linkCheckResult.suspicious && !linkCheckResult.malware && !linkCheckResult.phishing
+                      ? "bg-green-500/10 border border-green-500/20" 
+                      : "bg-red-500/10 border border-red-500/20"
+                  }`}>
+                    {!linkCheckResult.suspicious && !linkCheckResult.malware && !linkCheckResult.phishing ? (
+                      <Shield className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <AlertTriangle className="h-5 w-5 text-red-500" />
+                    )}
+                    <div>
+                      <p className="font-medium">
+                        {!linkCheckResult.suspicious && !linkCheckResult.malware && !linkCheckResult.phishing 
+                          ? "This link appears to be safe" 
+                          : `Warning: Suspicious link detected!`}
+                      </p>
+                      <p className="text-sm opacity-80">
+                        {!linkCheckResult.suspicious && !linkCheckResult.malware && !linkCheckResult.phishing 
+                          ? "Our analysis didn't detect any significant threats" 
+                          : "This link shows characteristics commonly associated with malicious sites"}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">Domain Information</h4>
+                      <div className="text-sm space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Domain:</span>
+                          <span className="font-medium">{linkCheckResult.domain}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Category:</span>
+                          <span className="font-medium">{linkCheckResult.category || "Uncategorized"}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Server:</span>
+                          <span className="font-medium">{linkCheckResult.server || "Unknown"}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">Security Flags</h4>
+                      <div className="text-sm space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Phishing:</span>
+                          <span className={linkCheckResult.phishing ? "text-red-500 font-medium" : "text-green-500 font-medium"}>
+                            {linkCheckResult.phishing ? "Detected" : "Not Detected"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Malware:</span>
+                          <span className={linkCheckResult.malware ? "text-red-500 font-medium" : "text-green-500 font-medium"}>
+                            {linkCheckResult.malware ? "Detected" : "Not Detected"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Suspicious:</span>
+                          <span className={linkCheckResult.suspicious ? "text-amber-500 font-medium" : "text-green-500 font-medium"}>
+                            {linkCheckResult.suspicious ? "Yes" : "No"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {emailVerifyResult && activeTab === "verify-email" && (
+            <div className="mt-8 animate-fade-in">
+              <Card className="glassmorphism shadow-sm">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Email Verification Results</CardTitle>
+                    <div className="flex items-center space-x-2">
+                      {emailVerifyResult.deliverability === "DELIVERABLE" ? (
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <AlertTriangle className="h-5 w-5 text-amber-500" />
+                      )}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className={`p-4 rounded-lg ${
+                    emailVerifyResult.deliverability === "DELIVERABLE" && !emailVerifyResult.is_disposable_email
+                      ? "bg-green-500/10 border border-green-500/20" 
+                      : "bg-amber-500/10 border border-amber-500/20"
+                  }`}>
+                    <p className="font-medium">
+                      {emailVerifyResult.deliverability === "DELIVERABLE" 
+                        ? "Email appears to be valid and deliverable" 
+                        : "This email may have deliverability issues"}
+                    </p>
+                    <p className="text-sm opacity-80 mt-1">
+                      Quality score: {(emailVerifyResult.quality_score * 100).toFixed(0)}%
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-3 text-sm">
+                      <h4 className="font-medium">Format Analysis</h4>
+                      <div className="space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Format Valid:</span>
+                          <span className={emailVerifyResult.is_valid_format ? "text-green-500" : "text-red-500"}>
+                            {emailVerifyResult.is_valid_format ? "Yes" : "No"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Domain:</span>
+                          <span>{emailVerifyResult.domain}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Free Email:</span>
+                          <span>{emailVerifyResult.is_free_email ? "Yes" : "No"}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3 text-sm">
+                      <h4 className="font-medium">Security Flags</h4>
+                      <div className="space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Disposable Email:</span>
+                          <span className={emailVerifyResult.is_disposable_email ? "text-red-500" : "text-green-500"}>
+                            {emailVerifyResult.is_disposable_email ? "Yes (Not recommended)" : "No"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Role Email:</span>
+                          <span className={emailVerifyResult.is_role_email ? "text-amber-500" : "text-green-500"}>
+                            {emailVerifyResult.is_role_email ? "Yes" : "No"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">MX Records:</span>
+                          <span className={emailVerifyResult.is_mx_found ? "text-green-500" : "text-red-500"}>
+                            {emailVerifyResult.is_mx_found ? "Found" : "Not Found"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           )}
         </div>
