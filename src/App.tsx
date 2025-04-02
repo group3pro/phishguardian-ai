@@ -55,9 +55,30 @@ const App = () => (
                 } 
               />
               <Route path="/scanner" element={<Scanner />} />
-              <Route path="/chatbot" element={<Chatbot />} />
-              <Route path="/email-verifier" element={<EmailVerifier />} />
-              <Route path="/link-checker" element={<LinkChecker />} />
+              <Route 
+                path="/chatbot" 
+                element={
+                  <ProtectedRoute>
+                    <Chatbot />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/email-verifier" 
+                element={
+                  <ProtectedRoute>
+                    <EmailVerifier />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/link-checker" 
+                element={
+                  <ProtectedRoute>
+                    <LinkChecker />
+                  </ProtectedRoute>
+                } 
+              />
               <Route path="/about" element={<About />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
