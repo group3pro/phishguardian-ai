@@ -2,7 +2,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Shield, Mail, ArrowRight, Lock, AlertTriangle, Database } from "lucide-react";
+import { Shield, Mail, ArrowRight, Lock, AlertTriangle, Database, MessageSquare, Link2 } from "lucide-react";
 import FeatureCard from "@/components/ui/FeatureCard";
 import AnimatedBackground from "@/components/ui/AnimatedBackground";
 import { SignedIn, SignedOut } from "@clerk/clerk-react";
@@ -71,22 +71,103 @@ const Index = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <FeatureCard
+                icon={Mail}
+                title="Email Analysis"
+                description="Check suspicious emails for phishing attempts and security threats."
+              />
+              <FeatureCard
+                icon={Link2}
+                title="Link Checker"
+                description="Verify if links are safe before clicking to avoid malicious websites."
+              />
+              <FeatureCard
+                icon={MessageSquare}
+                title="Security Chatbot"
+                description="Get instant answers to your cybersecurity questions."
+              />
               <FeatureCard
                 icon={AlertTriangle}
-                title="Phishing Detection"
-                description="Advanced algorithms identify malicious emails, websites, and links with high accuracy."
+                title="Email Verification"
+                description="Verify if an email address is real, legitimate, and deliverable."
               />
-              <FeatureCard
-                icon={Database}
-                title="Machine Learning"
-                description="Our AI continuously improves from new threats to enhance protection against evolving attacks."
-              />
-              <FeatureCard
-                icon={Lock}
-                title="Real-time Protection"
-                description="Instant analysis of suspicious content to keep you safe from emerging threats."
-              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Tools Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold mb-4">Security Tools</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Protect yourself against cyber threats with our suite of security tools
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Link to="/scanner" className="group">
+                <div className="border rounded-lg p-6 h-full transition-all hover:shadow-md hover:border-primary/40 hover:bg-muted/50">
+                  <div className="mb-4">
+                    <div className="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                      <Mail className="h-6 w-6" />
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">Email Content Scanner</h3>
+                  <p className="text-muted-foreground mb-4">Analyze email content to detect phishing attempts and threats.</p>
+                  <Button variant="outline" className="group-hover:bg-primary group-hover:text-primary-foreground">
+                    Try Scanner
+                  </Button>
+                </div>
+              </Link>
+
+              <Link to="/link-checker" className="group">
+                <div className="border rounded-lg p-6 h-full transition-all hover:shadow-md hover:border-primary/40 hover:bg-muted/50">
+                  <div className="mb-4">
+                    <div className="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                      <Link2 className="h-6 w-6" />
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">Suspicious Link Checker</h3>
+                  <p className="text-muted-foreground mb-4">Verify if links are safe before clicking to protect your digital identity.</p>
+                  <Button variant="outline" className="group-hover:bg-primary group-hover:text-primary-foreground">
+                    Check Links
+                  </Button>
+                </div>
+              </Link>
+
+              <Link to="/email-verifier" className="group">
+                <div className="border rounded-lg p-6 h-full transition-all hover:shadow-md hover:border-primary/40 hover:bg-muted/50">
+                  <div className="mb-4">
+                    <div className="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                      <AlertTriangle className="h-6 w-6" />
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">Email Address Verification</h3>
+                  <p className="text-muted-foreground mb-4">Verify if an email address is legitimate, deliverable, and not disposable.</p>
+                  <Button variant="outline" className="group-hover:bg-primary group-hover:text-primary-foreground">
+                    Verify Emails
+                  </Button>
+                </div>
+              </Link>
+
+              <Link to="/chatbot" className="group">
+                <div className="border rounded-lg p-6 h-full transition-all hover:shadow-md hover:border-primary/40 hover:bg-muted/50">
+                  <div className="mb-4">
+                    <div className="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                      <MessageSquare className="h-6 w-6" />
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">Security Chatbot</h3>
+                  <p className="text-muted-foreground mb-4">Get instant answers to your cybersecurity questions and concerns.</p>
+                  <Button variant="outline" className="group-hover:bg-primary group-hover:text-primary-foreground">
+                    Chat Now
+                  </Button>
+                </div>
+              </Link>
             </div>
           </div>
         </div>

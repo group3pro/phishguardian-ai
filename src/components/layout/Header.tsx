@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { Shield, Menu, X } from "lucide-react";
+import { Shield, Menu, X, MessageSquare, Mail, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   SignedIn, 
@@ -71,6 +71,40 @@ const Header = () => {
           >
             Scanner
           </Link>
+
+          <Link 
+            to="/chatbot" 
+            className="text-foreground/70 hover:text-foreground transition-colors px-2 py-1.5"
+            onClick={closeMenu}
+          >
+            <div className="flex items-center gap-1">
+              <MessageSquare className="h-4 w-4" />
+              <span>Chatbot</span>
+            </div>
+          </Link>
+
+          <Link 
+            to="/email-verifier" 
+            className="text-foreground/70 hover:text-foreground transition-colors px-2 py-1.5"
+            onClick={closeMenu}
+          >
+            <div className="flex items-center gap-1">
+              <Mail className="h-4 w-4" />
+              <span>Email Verifier</span>
+            </div>
+          </Link>
+
+          <Link 
+            to="/link-checker" 
+            className="text-foreground/70 hover:text-foreground transition-colors px-2 py-1.5"
+            onClick={closeMenu}
+          >
+            <div className="flex items-center gap-1">
+              <Link2 className="h-4 w-4" />
+              <span>Link Checker</span>
+            </div>
+          </Link>
+
           <Link 
             to="/about" 
             className="text-foreground/70 hover:text-foreground transition-colors px-2 py-1.5"

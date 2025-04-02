@@ -15,6 +15,9 @@ import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
+import Chatbot from "./pages/Chatbot";
+import EmailVerifier from "./pages/EmailVerifier";
+import LinkChecker from "./pages/LinkChecker";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +55,9 @@ const App = () => (
                 } 
               />
               <Route path="/scanner" element={<Scanner />} />
+              <Route path="/chatbot" element={<Chatbot />} />
+              <Route path="/email-verifier" element={<EmailVerifier />} />
+              <Route path="/link-checker" element={<LinkChecker />} />
               <Route path="/about" element={<About />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
