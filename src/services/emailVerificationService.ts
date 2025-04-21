@@ -2,8 +2,6 @@
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-const TRUMAIL_API_URL = "https://trumail.io/json/";
-
 export interface EmailVerificationResult {
   email: string;
   deliverability: string;
@@ -23,7 +21,17 @@ export const verifyEmail = async (email: string): Promise<EmailVerificationResul
   try {
     toast.info("Verifying email address...");
     
-    const response = await fetch(`${TRUMAIL_API_URL}${encodeURIComponent(email)}`);
+    const { data: apiConfig } = await supabase
+      .from('email_verification_config')
+      .select('api_url')
+      .single();
+
+    if (!apiConfig?.api_url) {
+      toast.error("Email verification service is not configured");
+      return null;
+    }
+    
+    const response = await fetch(`${apiConfig.api_url}${encodeURIComponent(email)}`);
 
     if (!response.ok) {
       throw new Error("Email verification failed");
@@ -61,3 +69,4 @@ export const verifyEmail = async (email: string): Promise<EmailVerificationResul
     return null;
   }
 };
+
