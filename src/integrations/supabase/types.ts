@@ -99,6 +99,30 @@ export type Database = {
         }
         Relationships: []
       }
+      url_verifications: {
+        Row: {
+          created_at: string
+          details: Json
+          id: string
+          is_malicious: boolean
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          details: Json
+          id?: string
+          is_malicious: boolean
+          url: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          id?: string
+          is_malicious?: boolean
+          url?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

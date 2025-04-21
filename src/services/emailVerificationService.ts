@@ -147,12 +147,14 @@ export const verifyURL = async (url: string): Promise<URLVerificationResult | nu
       domain: linkCheckResult.domain
     };
 
-    // Save verification to Supabase
-    const { error } = await supabase.from('url_verifications').insert({
-      url: result.url,
-      is_malicious: result.is_malicious,
-      details: result as unknown as Record<string, any>
-    });
+    // Save verification to Supabase using the new url_verifications table
+    const { error } = await supabase
+      .from('url_verifications')
+      .insert({
+        url: result.url,
+        is_malicious: result.is_malicious,
+        details: result as unknown as Record<string, any>
+      });
 
     if (error) {
       console.error("Error saving URL verification:", error);
@@ -166,4 +168,3 @@ export const verifyURL = async (url: string): Promise<URLVerificationResult | nu
     return null;
   }
 };
-
