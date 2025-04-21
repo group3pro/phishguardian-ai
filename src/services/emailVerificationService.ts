@@ -41,11 +41,11 @@ export const verifyEmail = async (email: string): Promise<EmailVerificationResul
       domain: data.domain
     };
 
-    // Save verification to Supabase
+    // Save verification to Supabase - fix the type issue with JSON
     const { error } = await supabase.from('email_verifications').insert({
       email: result.email,
       is_valid: result.deliverability === "DELIVERABLE",
-      details: result
+      details: result as unknown as Record<string, any> // Convert to a JSON compatible format
     });
 
     if (error) {
