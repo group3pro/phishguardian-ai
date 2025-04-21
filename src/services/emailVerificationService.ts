@@ -43,16 +43,18 @@ export const verifyEmail = async (email: string): Promise<EmailVerificationResul
       }
 
       const data = await response.json();
+      console.log("GetProspect API response:", data);
       
       // Map GetProspect API response to our interface
+      // GetProspect returns status: "valid" for valid emails
       const result: EmailVerificationResult = {
         email: email,
-        deliverability: data.deliverable ? "DELIVERABLE" : "UNDELIVERABLE",
-        quality_score: data.score || 0,
-        is_valid_format: data.format_valid || false,
-        is_free_email: data.free || false,
-        is_disposable_email: data.disposable || false,
-        domain: data.domain || email.split('@')[1]
+        deliverability: data.status === "valid" ? "DELIVERABLE" : "UNDELIVERABLE",
+        quality_score: data.status === "valid" ? 0.9 : 0.1,
+        is_valid_format: true, // If the API returns a result, the format is valid
+        is_free_email: email.includes("gmail.com") || email.includes("yahoo.com") || email.includes("hotmail.com"),
+        is_disposable_email: false, // GetProspect doesn't provide this info directly
+        domain: data.fqdn || email.split('@')[1]
       };
 
       // Save verification to Supabase
@@ -73,8 +75,39 @@ export const verifyEmail = async (email: string): Promise<EmailVerificationResul
     } catch (fetchError) {
       console.error("API fetch error:", fetchError);
       toast.dismiss("email-verification");
-      toast.error("Email verification failed");
-      return null;
+      
+      // Provide a fallback with UNKNOWN status
+      const domain = email.split('@')[1] || '';
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const isValidFormat = emailPattern.test(email);
+      
+      const result: EmailVerificationResult = {
+        email: email,
+        deliverability: "UNKNOWN",
+        quality_score: 0,
+        is_valid_format: isValidFormat,
+        is_free_email: false,
+        is_disposable_email: false,
+        domain: domain
+      };
+      
+      // Save the fallback verification to Supabase
+      const { error } = await supabase.from('email_verifications').insert({
+        email: result.email,
+        is_valid: false,
+        details: { 
+          ...result,
+          verification_status: "ERROR",
+          error_message: "Verification service unavailable or error"
+        } as unknown as Record<string, any>
+      });
+      
+      if (error) {
+        console.error("Error saving verification error:", error);
+      }
+      
+      toast.error("Email verification service unavailable");
+      return result;
     }
   } catch (error) {
     console.error("Error verifying email:", error);
