@@ -1,9 +1,8 @@
 
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
-// Email verification API - using Abstract API (free tier)
-const API_KEY = "2dd8e75a60104f29961b408e5bd24019"; // Free tier key for demo purposes
-const API_URL = "https://emailvalidation.abstractapi.com/v1/";
+const TRUMAIL_API_URL = "https://trumail.io/json/";
 
 export interface EmailVerificationResult {
   email: string;
@@ -12,10 +11,6 @@ export interface EmailVerificationResult {
   is_valid_format: boolean;
   is_free_email: boolean;
   is_disposable_email: boolean;
-  is_role_email: boolean;
-  is_catchall_email: boolean;
-  is_mx_found: boolean;
-  is_smtp_valid: boolean;
   domain: string;
 }
 
@@ -28,23 +23,38 @@ export const verifyEmail = async (email: string): Promise<EmailVerificationResul
   try {
     toast.info("Verifying email address...");
     
-    const response = await fetch(
-      `${API_URL}?api_key=${API_KEY}&email=${encodeURIComponent(email)}`
-    );
+    const response = await fetch(`${TRUMAIL_API_URL}${encodeURIComponent(email)}`);
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error?.message || "Email verification failed");
+      throw new Error("Email verification failed");
     }
 
     const data = await response.json();
     
-    if (data && data.email) {
-      toast.success("Email verification complete");
-      return data;
-    } else {
-      throw new Error("Invalid response from email verification service");
+    const result: EmailVerificationResult = {
+      email: data.email,
+      deliverability: data.validFormat && data.deliverable ? "DELIVERABLE" : "UNDELIVERABLE",
+      quality_score: data.validFormat ? 0.8 : 0.2, // Rough estimation based on format
+      is_valid_format: data.validFormat,
+      is_free_email: data.freeEmail,
+      is_disposable_email: data.disposableEmail,
+      domain: data.domain
+    };
+
+    // Save verification to Supabase
+    const { error } = await supabase.from('email_verifications').insert({
+      email: result.email,
+      is_valid: result.deliverability === "DELIVERABLE",
+      details: result
+    });
+
+    if (error) {
+      console.error("Error saving email verification:", error);
+      toast.error("Failed to save verification details");
     }
+
+    toast.success("Email verification complete");
+    return result;
   } catch (error) {
     console.error("Error verifying email:", error);
     toast.error("Failed to verify email. Please try again.");
