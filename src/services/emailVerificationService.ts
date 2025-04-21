@@ -21,41 +21,17 @@ export const verifyEmail = async (email: string): Promise<EmailVerificationResul
   try {
     toast.info("Verifying email address...");
     
-    const { data: apiConfig, error: configError } = await supabase
-      .from('email_verification_config')
-      .select('api_url')
-      .single();
-
-    if (configError || !apiConfig?.api_url) {
-      toast.error("Email verification service is not configured");
-      return null;
-    }
-    
     try {
       // Show specific toast to indicate API call is in progress
       toast.loading("Contacting verification service...", {
         id: "email-verification"
       });
       
-      // Add optional API key if available
-      const headers: HeadersInit = {
-        'Accept': 'application/json'
-      };
-      
-      const trumail_api_key = await supabase.functions.invoke('get-secret', {
-        body: { name: 'TRUMAIL_API_KEY' }
-      }).then(response => response.data?.value).catch(() => null);
-      
-      if (trumail_api_key) {
-        headers['Authorization'] = `Bearer ${trumail_api_key}`;
-      }
-      
       // Set timeout to handle slow API responses
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 seconds timeout
       
-      const response = await fetch(`${apiConfig.api_url}${encodeURIComponent(email)}`, {
-        headers,
+      const response = await fetch(`https://api.getprospect.com/public/v1/email/verify?email=${encodeURIComponent(email)}&apiKey=5cf7ba99-6688-40e8-9a66-288ee1865fd9`, {
         signal: controller.signal
       }).finally(() => clearTimeout(timeoutId));
 
@@ -68,21 +44,15 @@ export const verifyEmail = async (email: string): Promise<EmailVerificationResul
 
       const data = await response.json();
       
-      // Check if the response has the expected format
-      if (!data.hasOwnProperty('email') || 
-          !data.hasOwnProperty('validFormat') || 
-          !data.hasOwnProperty('domain')) {
-        throw new Error("Invalid API response format");
-      }
-      
+      // Map GetProspect API response to our interface
       const result: EmailVerificationResult = {
-        email: data.email,
-        deliverability: data.validFormat && data.deliverable ? "DELIVERABLE" : "UNDELIVERABLE",
-        quality_score: data.validFormat ? 0.8 : 0.2, // Rough estimation based on format
-        is_valid_format: data.validFormat,
-        is_free_email: data.freeEmail || false,
-        is_disposable_email: data.disposableEmail || false,
-        domain: data.domain
+        email: email,
+        deliverability: data.deliverable ? "DELIVERABLE" : "UNDELIVERABLE",
+        quality_score: data.score || 0,
+        is_valid_format: data.format_valid || false,
+        is_free_email: data.free || false,
+        is_disposable_email: data.disposable || false,
+        domain: data.domain || email.split('@')[1]
       };
 
       // Save verification to Supabase
@@ -103,41 +73,8 @@ export const verifyEmail = async (email: string): Promise<EmailVerificationResul
     } catch (fetchError) {
       console.error("API fetch error:", fetchError);
       toast.dismiss("email-verification");
-      toast.error("Email verification service unavailable");
-      
-      // Don't return a fake result, instead return a clear error result
-      const domain = email.split('@')[1] || '';
-      
-      // Only validate the format but clearly indicate this is NOT a full verification
-      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      const isValidFormat = emailPattern.test(email);
-      
-      const result: EmailVerificationResult = {
-        email: email,
-        deliverability: "UNKNOWN", // Changed from DELIVERABLE to UNKNOWN
-        quality_score: 0,  // Zero score to indicate no real verification
-        is_valid_format: isValidFormat,
-        is_free_email: false, // We don't know, so default to false
-        is_disposable_email: false, // We don't know, so default to false
-        domain: domain
-      };
-      
-      // Save the error case to Supabase with clear indication this is not verified
-      const { error } = await supabase.from('email_verifications').insert({
-        email: result.email,
-        is_valid: false,
-        details: { 
-          ...result,
-          verification_status: "ERROR",
-          error_message: "Verification service unavailable"
-        } as unknown as Record<string, any>
-      });
-
-      if (error) {
-        console.error("Error saving verification error:", error);
-      }
-      
-      return result;
+      toast.error("Email verification failed");
+      return null;
     }
   } catch (error) {
     console.error("Error verifying email:", error);
