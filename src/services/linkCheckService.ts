@@ -40,45 +40,117 @@ export const checkLink = async (url: string): Promise<LinkCheckResult | null> =>
   }
 
   try {
-    // Since the external API is failing, we'll provide a mock response based on the URL
-    // This is just for demonstration purposes
-    const domain = new URL(formattedUrl).hostname;
+    // Since the external API is failing, we'll provide a more varied mock response based on the URL
+    let domain = "";
+    try {
+      domain = new URL(formattedUrl).hostname;
+    } catch (error) {
+      toast.error("Invalid URL format");
+      return null;
+    }
     
-    // Get risk level based on some common patterns in the domain
-    const hasSuspiciousPattern = /free|deal|prize|win|crypto|wallet|verify|banking|secure|update/.test(domain);
-    const isKnownSafe = /google\.com|microsoft\.com|apple\.com|amazon\.com|github\.com/.test(domain);
+    // Create more varied patterns for analysis
+    const lowercaseDomain = domain.toLowerCase();
     
-    const riskScore = hasSuspiciousPattern ? 75 : (isKnownSafe ? 15 : 45);
+    // Check for known safe domains
+    const knownSafeDomains = [
+      "google.com", "microsoft.com", "apple.com", "amazon.com", "github.com",
+      "facebook.com", "twitter.com", "linkedin.com", "instagram.com", "youtube.com"
+    ];
     
-    // Create a simulated response
+    // Check for suspicious patterns
+    const highRiskPatterns = [
+      "free", "deal", "prize", "win", "crypto", "wallet", "verify", "banking", 
+      "secure", "update", "login", "signin", "account", "password", "payment"
+    ];
+    
+    // Check for malicious patterns
+    const malwarePatterns = [
+      "malware", "hack", "crack", "pirate", "warez", "keygen", "torrent"
+    ];
+    
+    // Check for adult content patterns
+    const adultPatterns = ["adult", "xxx", "sex", "porn"];
+
+    // Determine if domain has suspicious patterns
+    const hasHighRiskPattern = highRiskPatterns.some(pattern => lowercaseDomain.includes(pattern));
+    const hasMalwarePattern = malwarePatterns.some(pattern => lowercaseDomain.includes(pattern));
+    const hasAdultPattern = adultPatterns.some(pattern => lowercaseDomain.includes(pattern));
+    
+    // Check if domain is known to be safe
+    const isKnownSafe = knownSafeDomains.some(safeDomain => lowercaseDomain.includes(safeDomain));
+    
+    // Generate a risk score based on the domain analysis
+    let riskScore = 30; // Default medium-low risk
+    
+    if (isKnownSafe) {
+      riskScore = 10 + Math.floor(Math.random() * 15); // 10-25 (low risk)
+    } else if (hasHighRiskPattern) {
+      riskScore = 50 + Math.floor(Math.random() * 20); // 50-70 (medium-high risk)
+    }
+    
+    if (hasMalwarePattern) {
+      riskScore += 25; // Increase risk for malware patterns
+    }
+    
+    if (hasAdultPattern) {
+      riskScore += 15; // Increase risk for adult content
+    }
+    
+    // Ensure risk score stays within 0-100 range
+    riskScore = Math.min(100, Math.max(0, riskScore));
+    
+    // Generate random domain rank based on risk score
+    const domainRank = isKnownSafe ? 
+      85 + Math.floor(Math.random() * 15) : // 85-100 for known safe
+      Math.max(5, 100 - riskScore - Math.floor(Math.random() * 20)); // Lower for risky sites
+    
+    // Determine category based on patterns
+    let category = "Uncategorized";
+    
+    if (isKnownSafe) {
+      category = "Trusted";
+    } else if (hasHighRiskPattern) {
+      category = "Suspicious";
+    }
+    
+    if (hasMalwarePattern) {
+      category = "Potentially Harmful";
+    }
+    
+    if (hasAdultPattern) {
+      category = "Adult Content";
+    }
+    
+    // Create a simulated response with more variety
     const result: LinkCheckResult = {
       message: "Link checked successfully",
       success: true,
       unsafe: riskScore > 70,
       domain: domain,
-      ip_address: "127.0.0.1", // Placeholder
-      server: "Unknown",
+      ip_address: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+      server: ["Apache", "Nginx", "IIS", "Cloudflare", "AWS"][Math.floor(Math.random() * 5)],
       content_type: "text/html",
-      status_code: 200,
-      page_size: 0,
-      domain_rank: isKnownSafe ? 90 : 40,
-      dns_valid: true,
+      status_code: Math.random() > 0.9 ? 404 : 200,
+      page_size: Math.floor(Math.random() * 500000),
+      domain_rank: domainRank,
+      dns_valid: Math.random() > 0.1 || isKnownSafe,
       suspicious: riskScore > 50,
       phishing: riskScore > 70,
-      malware: false,
-      spamming: false,
-      adult: false,
+      malware: hasMalwarePattern,
+      spamming: hasHighRiskPattern && Math.random() > 0.7,
+      adult: hasAdultPattern,
       risk_score: riskScore,
-      parking: false,
-      redirected: false,
+      parking: Math.random() > 0.9 && !isKnownSafe,
+      redirected: Math.random() > 0.8,
       final_url: formattedUrl,
-      category: isKnownSafe ? "Trusted" : (hasSuspiciousPattern ? "Suspicious" : "Uncategorized")
+      category: category
     };
     
     // Log to user so they know we're using a simulation
     toast.success("URL analyzed (simulation mode)");
     
-    // Save the verification to Supabase (with correct properties)
+    // Save the verification to Supabase with correct properties
     const { error } = await supabase
       .from('url_verifications')
       .insert({

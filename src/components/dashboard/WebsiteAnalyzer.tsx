@@ -26,9 +26,11 @@ export const WebsiteAnalyzer = () => {
       const result = await checkLink(websiteUrl);
       if (result) {
         setLinkCheckResult(result);
+        console.log("Website analysis result:", result);
       }
     } catch (error) {
       console.error("Error checking website:", error);
+      toast.error("Failed to analyze website");
     } finally {
       setIsLoading(false);
     }
@@ -39,12 +41,19 @@ export const WebsiteAnalyzer = () => {
     setLinkCheckResult(null);
   };
 
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleAnalyze();
+    }
+  };
+
   return (
     <div className="space-y-4">
       <Input 
-        placeholder="Enter website URL (e.g., https://suspicious-site.com)" 
+        placeholder="Enter website URL (e.g., example.com or https://example.com)" 
         value={websiteUrl}
         onChange={(e) => setWebsiteUrl(e.target.value)}
+        onKeyPress={handleKeyPress}
       />
 
       <div className="flex gap-2">
