@@ -32,33 +32,64 @@ export const verifyEmail = async (email: string): Promise<EmailVerificationResul
     }
     
     try {
-      const response = await fetch(`${apiConfig.api_url}${encodeURIComponent(email)}`, {
-        headers: {
-          'Accept': 'application/json'
-        }
+      // Show specific toast to indicate API call is in progress
+      toast.loading("Contacting verification service...", {
+        id: "email-verification"
       });
+      
+      // Add optional API key if available
+      const headers: HeadersInit = {
+        'Accept': 'application/json'
+      };
+      
+      const trumail_api_key = await supabase.functions.invoke('get-secret', {
+        body: { name: 'TRUMAIL_API_KEY' }
+      }).then(response => response.data?.value).catch(() => null);
+      
+      if (trumail_api_key) {
+        headers['Authorization'] = `Bearer ${trumail_api_key}`;
+      }
+      
+      // Set timeout to handle slow API responses
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 seconds timeout
+      
+      const response = await fetch(`${apiConfig.api_url}${encodeURIComponent(email)}`, {
+        headers,
+        signal: controller.signal
+      }).finally(() => clearTimeout(timeoutId));
+
+      // Remove the loading toast
+      toast.dismiss("email-verification");
 
       if (!response.ok) {
-        throw new Error("Email verification failed");
+        throw new Error(`API returned status ${response.status}`);
       }
 
       const data = await response.json();
+      
+      // Check if the response has the expected format
+      if (!data.hasOwnProperty('email') || 
+          !data.hasOwnProperty('validFormat') || 
+          !data.hasOwnProperty('domain')) {
+        throw new Error("Invalid API response format");
+      }
       
       const result: EmailVerificationResult = {
         email: data.email,
         deliverability: data.validFormat && data.deliverable ? "DELIVERABLE" : "UNDELIVERABLE",
         quality_score: data.validFormat ? 0.8 : 0.2, // Rough estimation based on format
         is_valid_format: data.validFormat,
-        is_free_email: data.freeEmail,
-        is_disposable_email: data.disposableEmail,
+        is_free_email: data.freeEmail || false,
+        is_disposable_email: data.disposableEmail || false,
         domain: data.domain
       };
 
-      // Save verification to Supabase - fix the type issue with JSON
+      // Save verification to Supabase
       const { error } = await supabase.from('email_verifications').insert({
         email: result.email,
         is_valid: result.deliverability === "DELIVERABLE",
-        details: result as unknown as Record<string, any> // Convert to a JSON compatible format
+        details: result as unknown as Record<string, any>
       });
 
       if (error) {
@@ -68,46 +99,44 @@ export const verifyEmail = async (email: string): Promise<EmailVerificationResul
 
       toast.success("Email verification complete");
       return result;
+      
     } catch (fetchError) {
       console.error("API fetch error:", fetchError);
+      toast.dismiss("email-verification");
+      toast.error("Email verification service unavailable");
       
-      // Fallback: Implement basic email validation when API is inaccessible
+      // Don't return a fake result, instead return a clear error result
+      const domain = email.split('@')[1] || '';
+      
+      // Only validate the format but clearly indicate this is NOT a full verification
       const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       const isValidFormat = emailPattern.test(email);
       
-      // Extract domain for basic checks
-      const domain = email.split('@')[1];
-      const commonDisposableDomains = ['mailinator.com', 'tempmail.com', 'disposable.com', 'yopmail.com', 'guerrillamail.com'];
-      const commonFreeDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com'];
-      
-      const isDisposable = commonDisposableDomains.includes(domain);
-      const isFreeEmail = commonFreeDomains.includes(domain);
-      
       const result: EmailVerificationResult = {
         email: email,
-        deliverability: isValidFormat ? "DELIVERABLE" : "UNDELIVERABLE",
-        quality_score: isValidFormat ? (isDisposable ? 0.3 : 0.7) : 0.1,
+        deliverability: "UNKNOWN", // Changed from DELIVERABLE to UNKNOWN
+        quality_score: 0,  // Zero score to indicate no real verification
         is_valid_format: isValidFormat,
-        is_free_email: isFreeEmail,
-        is_disposable_email: isDisposable,
+        is_free_email: false, // We don't know, so default to false
+        is_disposable_email: false, // We don't know, so default to false
         domain: domain
       };
       
-      // Save verification to Supabase with fallback notation
+      // Save the error case to Supabase with clear indication this is not verified
       const { error } = await supabase.from('email_verifications').insert({
         email: result.email,
-        is_valid: result.is_valid_format,
+        is_valid: false,
         details: { 
           ...result,
-          verification_note: "API unavailable - basic validation only" 
+          verification_status: "ERROR",
+          error_message: "Verification service unavailable"
         } as unknown as Record<string, any>
       });
 
       if (error) {
-        console.error("Error saving email verification:", error);
+        console.error("Error saving verification error:", error);
       }
       
-      toast.success("Email basic verification complete (offline mode)");
       return result;
     }
   } catch (error) {

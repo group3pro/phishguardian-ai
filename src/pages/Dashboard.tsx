@@ -26,7 +26,6 @@ const Dashboard = () => {
     { role: "assistant", content: "Ask me anything about cybersecurity!" }
   ]);
 
-  // Results states
   const [emailVerifyResult, setEmailVerifyResult] = useState<EmailVerificationResult | null>(null);
   const [linkCheckResult, setLinkCheckResult] = useState<LinkCheckResult | null>(null);
   
@@ -64,10 +63,8 @@ const Dashboard = () => {
     if (activeTab === "email") {
       analyzeEmail(emailContent);
     } else if (activeTab === "website") {
-      // For website analysis, we treat the URL as content to analyze
       analyzeEmail(`Website URL: ${websiteUrl}`);
     } else if (activeTab === "link") {
-      // For link checking, use the dedicated service
       setLinkLoading(true);
       setLinkCheckResult(null);
       try {
@@ -81,7 +78,6 @@ const Dashboard = () => {
         setLinkLoading(false);
       }
     } else if (activeTab === "verify-email") {
-      // Email verification
       setVerifyLoading(true);
       setEmailVerifyResult(null);
       try {
@@ -95,7 +91,6 @@ const Dashboard = () => {
         setVerifyLoading(false);
       }
     } else if (activeTab === "chatbot") {
-      // Chatbot interaction
       setChatLoading(true);
       const userMessage: ChatMessage = {
         role: "user",
@@ -395,8 +390,10 @@ const Dashboard = () => {
                     <div className="flex items-center space-x-2">
                       {emailVerifyResult.deliverability === "DELIVERABLE" ? (
                         <CheckCircle className="h-5 w-5 text-green-500" />
-                      ) : (
+                      ) : emailVerifyResult.deliverability === "UNKNOWN" ? (
                         <AlertTriangle className="h-5 w-5 text-amber-500" />
+                      ) : (
+                        <AlertTriangle className="h-5 w-5 text-red-500" />
                       )}
                     </div>
                   </div>
@@ -405,15 +402,21 @@ const Dashboard = () => {
                   <div className={`p-4 rounded-lg ${
                     emailVerifyResult.deliverability === "DELIVERABLE" && !emailVerifyResult.is_disposable_email
                       ? "bg-green-500/10 border border-green-500/20" 
-                      : "bg-amber-500/10 border border-amber-500/20"
+                      : emailVerifyResult.deliverability === "UNKNOWN"
+                        ? "bg-amber-500/10 border border-amber-500/20"
+                        : "bg-red-500/10 border border-red-500/20"
                   }`}>
                     <p className="font-medium">
                       {emailVerifyResult.deliverability === "DELIVERABLE" 
                         ? "Email appears to be valid and deliverable" 
-                        : "This email may have deliverability issues"}
+                        : emailVerifyResult.deliverability === "UNKNOWN"
+                          ? "Email verification service unavailable - format check only"
+                          : "This email may have deliverability issues"}
                     </p>
                     <p className="text-sm opacity-80 mt-1">
-                      Quality score: {(emailVerifyResult.quality_score * 100).toFixed(0)}%
+                      {emailVerifyResult.deliverability !== "UNKNOWN" 
+                        ? `Quality score: ${(emailVerifyResult.quality_score * 100).toFixed(0)}%`
+                        : "No quality score available - verification service down"}
                     </p>
                   </div>
                   
@@ -431,20 +434,34 @@ const Dashboard = () => {
                           <span className="text-muted-foreground">Domain:</span>
                           <span>{emailVerifyResult.domain}</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Free Email:</span>
-                          <span>{emailVerifyResult.is_free_email ? "Yes" : "No"}</span>
-                        </div>
+                        {emailVerifyResult.deliverability !== "UNKNOWN" && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Free Email:</span>
+                            <span>{emailVerifyResult.is_free_email ? "Yes" : "No"}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     
                     <div className="space-y-3 text-sm">
                       <h4 className="font-medium">Security Flags</h4>
                       <div className="space-y-1">
+                        {emailVerifyResult.deliverability !== "UNKNOWN" && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Disposable Email:</span>
+                            <span className={emailVerifyResult.is_disposable_email ? "text-red-500" : "text-green-500"}>
+                              {emailVerifyResult.is_disposable_email ? "Yes (Not recommended)" : "No"}
+                            </span>
+                          </div>
+                        )}
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Disposable Email:</span>
-                          <span className={emailVerifyResult.is_disposable_email ? "text-red-500" : "text-green-500"}>
-                            {emailVerifyResult.is_disposable_email ? "Yes (Not recommended)" : "No"}
+                          <span className="text-muted-foreground">Verification:</span>
+                          <span className={
+                            emailVerifyResult.deliverability === "DELIVERABLE" ? "text-green-500" : 
+                            emailVerifyResult.deliverability === "UNKNOWN" ? "text-amber-500" : "text-red-500"
+                          }>
+                            {emailVerifyResult.deliverability === "DELIVERABLE" ? "Verified" : 
+                             emailVerifyResult.deliverability === "UNKNOWN" ? "Service Unavailable" : "Failed"}
                           </span>
                         </div>
                       </div>
