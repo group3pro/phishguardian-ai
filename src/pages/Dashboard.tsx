@@ -8,6 +8,7 @@ import AnimatedBackground from "@/components/ui/AnimatedBackground";
 import { EmailAnalyzer } from "@/components/dashboard/EmailAnalyzer";
 import { WebsiteAnalyzer } from "@/components/dashboard/WebsiteAnalyzer";
 import { SecurityChat } from "@/components/dashboard/SecurityChat";
+import EmailVerifier from "@/pages/EmailVerifier";  // Import the EmailVerifier page
 
 const Dashboard = () => {
   const { user } = useUser();
@@ -38,7 +39,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="email" onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid grid-cols-2 md:grid-cols-3 mb-6 gap-1">
+                <TabsList className="grid grid-cols-3 md:grid-cols-4 mb-6 gap-1">
                   <TabsTrigger value="email" className="flex items-center gap-2">
                     <Mail className="h-4 w-4" />
                     <span className="hidden sm:inline">Email</span>
@@ -50,6 +51,10 @@ const Dashboard = () => {
                   <TabsTrigger value="chatbot" className="flex items-center gap-2">
                     <MessageSquare className="h-4 w-4" />
                     <span className="hidden sm:inline">Chatbot</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="email-verify" className="flex items-center gap-2">
+                    <Mail className="h-4 w-4" />
+                    <span className="hidden sm:inline">Email Verify</span>
                   </TabsTrigger>
                 </TabsList>
                 
@@ -64,6 +69,10 @@ const Dashboard = () => {
                 <TabsContent value="chatbot">
                   <SecurityChat />
                 </TabsContent>
+                
+                <TabsContent value="email-verify">
+                  <EmailVerifier />
+                </TabsContent>
               </Tabs>
             </CardContent>
           </Card>
@@ -74,3 +83,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
