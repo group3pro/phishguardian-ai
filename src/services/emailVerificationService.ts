@@ -147,7 +147,7 @@ export const verifyURL = async (url: string): Promise<URLVerificationResult | nu
       domain: linkCheckResult.domain
     };
 
-    // Save verification to Supabase using the new url_verifications table
+    // Save verification to Supabase using the url_verifications table
     const { error } = await supabase
       .from('url_verifications')
       .insert({
