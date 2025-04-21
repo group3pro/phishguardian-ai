@@ -447,18 +447,6 @@ const Dashboard = () => {
                             {emailVerifyResult.is_disposable_email ? "Yes (Not recommended)" : "No"}
                           </span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Role Email:</span>
-                          <span className={emailVerifyResult.is_role_email ? "text-amber-500" : "text-green-500"}>
-                            {emailVerifyResult.is_role_email ? "Yes" : "No"}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">MX Records:</span>
-                          <span className={emailVerifyResult.is_mx_found ? "text-green-500" : "text-red-500"}>
-                            {emailVerifyResult.is_mx_found ? "Found" : "Not Found"}
-                          </span>
-                        </div>
                       </div>
                     </div>
                   </div>

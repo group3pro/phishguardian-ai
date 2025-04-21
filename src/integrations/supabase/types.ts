@@ -33,6 +33,30 @@ export type Database = {
         }
         Relationships: []
       }
+      email_verifications: {
+        Row: {
+          created_at: string
+          details: Json
+          email: string
+          id: string
+          is_valid: boolean
+        }
+        Insert: {
+          created_at?: string
+          details: Json
+          email: string
+          id?: string
+          is_valid: boolean
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          email?: string
+          id?: string
+          is_valid?: boolean
+        }
+        Relationships: []
+      }
       security_chats: {
         Row: {
           answer: string
