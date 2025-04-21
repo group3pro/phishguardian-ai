@@ -1,5 +1,6 @@
 
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 // Using a mock implementation since the external API is failing
 export interface LinkCheckResult {
@@ -77,12 +78,12 @@ export const checkLink = async (url: string): Promise<LinkCheckResult | null> =>
     // Log to user so they know we're using a simulation
     toast.success("URL analyzed (simulation mode)");
     
-    // Save the verification to Supabase (retained from original code)
+    // Save the verification to Supabase (with correct properties)
     const { error } = await supabase
       .from('url_verifications')
       .insert({
-        url: result.url,
-        is_malicious: result.is_malicious,
+        url: formattedUrl,
+        is_malicious: result.phishing || result.malware,
         details: result as unknown as Record<string, any>
       });
 
