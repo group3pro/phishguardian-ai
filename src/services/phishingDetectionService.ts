@@ -1,6 +1,7 @@
 
 import { toast } from "sonner";
 import { analyzeEmailWithGemini } from "./geminiService";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface PhishingAnalysisResult {
   score: number;
@@ -23,6 +24,18 @@ export const analyzePhishingContent = async (content: string): Promise<PhishingA
   try {
     // Use Gemini to analyze the email content
     const result = await analyzeEmailWithGemini(content);
+    
+    // Save analysis to Supabase
+    const { error } = await supabase.from('email_analysis').insert({
+      email_content: content,
+      analysis_result: result,
+      threat_level: result.threatLevel
+    });
+
+    if (error) {
+      console.error("Error saving analysis to Supabase:", error);
+      toast.error("Failed to save analysis");
+    }
     
     // Validate the response structure
     if (!result.score || !result.threatLevel || !result.indicators || !result.details) {

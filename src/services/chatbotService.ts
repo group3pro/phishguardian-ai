@@ -1,6 +1,7 @@
 
 import { toast } from "sonner";
 import { getCybersecurityResponse } from "./geminiService";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface ChatMessage {
   role: "assistant" | "user";
@@ -18,6 +19,18 @@ export const getAIResponse = async (messages: ChatMessage[]): Promise<string> =>
   try {
     // Get response from Gemini with cybersecurity focus
     const response = await getCybersecurityResponse(userInput);
+
+    // Save chat history to Supabase
+    const { error } = await supabase.from('security_chats').insert({
+      question: userInput,
+      answer: response
+    });
+
+    if (error) {
+      console.error("Error saving chat to Supabase:", error);
+      toast.error("Failed to save chat history");
+    }
+
     return response;
   } catch (error) {
     console.error("Error getting AI response:", error);
