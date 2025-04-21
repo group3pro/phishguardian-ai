@@ -62,13 +62,12 @@ const Dashboard = () => {
     
     if (activeTab === "email") {
       analyzeEmail(emailContent);
-    } else if (activeTab === "website") {
-      analyzeEmail(`Website URL: ${websiteUrl}`);
-    } else if (activeTab === "link") {
+    } else if (activeTab === "website" || activeTab === "link") {
+      const urlToCheck = activeTab === "website" ? websiteUrl : linkUrl;
       setLinkLoading(true);
       setLinkCheckResult(null);
       try {
-        const result = await checkLink(linkUrl);
+        const result = await checkLink(urlToCheck);
         if (result) {
           setLinkCheckResult(result);
         }

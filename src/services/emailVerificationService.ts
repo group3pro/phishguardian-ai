@@ -1,6 +1,7 @@
 
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { checkLink } from "./linkCheckService";
 
 export interface EmailVerificationResult {
   email: string;
@@ -9,6 +10,14 @@ export interface EmailVerificationResult {
   is_valid_format: boolean;
   is_free_email: boolean;
   is_disposable_email: boolean;
+  domain: string;
+}
+
+export interface URLVerificationResult {
+  url: string;
+  is_malicious: boolean;
+  is_phishing: boolean;
+  risk_score: number;
   domain: string;
 }
 
@@ -115,3 +124,46 @@ export const verifyEmail = async (email: string): Promise<EmailVerificationResul
     return null;
   }
 };
+
+export const verifyURL = async (url: string): Promise<URLVerificationResult | null> => {
+  if (!url.trim()) {
+    toast.error("Please enter a URL to verify");
+    return null;
+  }
+
+  try {
+    toast.info("Verifying URL...");
+    
+    const linkCheckResult = await checkLink(url);
+    if (!linkCheckResult) {
+      return null;
+    }
+
+    const result: URLVerificationResult = {
+      url: url,
+      is_malicious: linkCheckResult.malware || linkCheckResult.phishing,
+      is_phishing: linkCheckResult.phishing,
+      risk_score: linkCheckResult.risk_score || 0,
+      domain: linkCheckResult.domain
+    };
+
+    // Save verification to Supabase
+    const { error } = await supabase.from('url_verifications').insert({
+      url: result.url,
+      is_malicious: result.is_malicious,
+      details: result as unknown as Record<string, any>
+    });
+
+    if (error) {
+      console.error("Error saving URL verification:", error);
+      toast.error("Failed to save verification details");
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Error verifying URL:", error);
+    toast.error("Failed to verify URL. Please try again.");
+    return null;
+  }
+};
+
