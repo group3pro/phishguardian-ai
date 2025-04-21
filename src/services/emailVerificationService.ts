@@ -26,6 +26,8 @@ export const verifyEmail = async (email: string): Promise<EmailVerificationResul
   }
 
   try {
+    toast.info("Verifying email address...");
+    
     const response = await fetch(
       `${API_URL}?api_key=${API_KEY}&email=${encodeURIComponent(email)}`
     );
@@ -36,7 +38,13 @@ export const verifyEmail = async (email: string): Promise<EmailVerificationResul
     }
 
     const data = await response.json();
-    return data;
+    
+    if (data && data.email) {
+      toast.success("Email verification complete");
+      return data;
+    } else {
+      throw new Error("Invalid response from email verification service");
+    }
   } catch (error) {
     console.error("Error verifying email:", error);
     toast.error("Failed to verify email. Please try again.");
