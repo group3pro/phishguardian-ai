@@ -33,6 +33,27 @@ export type Database = {
         }
         Relationships: []
       }
+      email_verification_config: {
+        Row: {
+          api_url: string
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          api_url: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          api_url?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_verifications: {
         Row: {
           created_at: string

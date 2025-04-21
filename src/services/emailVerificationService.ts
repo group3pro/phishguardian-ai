@@ -21,17 +21,21 @@ export const verifyEmail = async (email: string): Promise<EmailVerificationResul
   try {
     toast.info("Verifying email address...");
     
-    const { data: apiConfig } = await supabase
+    const { data: apiConfig, error: configError } = await supabase
       .from('email_verification_config')
       .select('api_url')
       .single();
 
-    if (!apiConfig?.api_url) {
+    if (configError || !apiConfig?.api_url) {
       toast.error("Email verification service is not configured");
       return null;
     }
     
-    const response = await fetch(`${apiConfig.api_url}${encodeURIComponent(email)}`);
+    const response = await fetch(`${apiConfig.api_url}${encodeURIComponent(email)}`, {
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
 
     if (!response.ok) {
       throw new Error("Email verification failed");
@@ -69,4 +73,3 @@ export const verifyEmail = async (email: string): Promise<EmailVerificationResul
     return null;
   }
 };
-
